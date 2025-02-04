@@ -317,7 +317,7 @@ function displayResults(timelineRows) {
   thead.innerHTML = `<tr>
       <th><i class="ri-calendar-line"></i> Месяц</th>
       <th><i class="ri-flag-line"></i> Цель</th>
-      <th>Накоплено всего</th>
+      <th>Расход на цели</th>
       <th>Остаток цели</th>
       <th>Остаток платежа</th>
     </tr>`;
@@ -335,7 +335,7 @@ function displayResults(timelineRows) {
         ? [...new Set(row.payments.map((p) => p.goalName))].join(", ")
         : "-";
 
-    // "Накоплено всего" – суммарная сумма платежей за месяц
+    // "Расход на цели" – суммарная сумма платежей за месяц
     let accumulated = row.totalPayment;
     // "Остаток цели" – суммарный остаток (для каждой цели: целевое – накопленное) в этом месяце
     let totalGoalRemainder = row.payments.reduce(
@@ -392,7 +392,7 @@ function openModal(paymentData) {
       <strong>Внесено в этом платеже:</strong> ${formatRUB(paymentData.payment)}
     </div>
     <div class="modal-content-item">
-      <strong>Накоплено всего:</strong> ${formatRUB(paymentData.cumulative)}
+      <strong>Расход на цели:</strong> ${formatRUB(paymentData.cumulative)}
     </div>
     <div class="modal-content-item">
       <strong>Остаток:</strong> ${formatRUB(paymentData.remainder)}
