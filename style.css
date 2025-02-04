@@ -276,3 +276,100 @@ button:active,
 .results-table th {
   text-align: left;
 }
+
+/* Общие стили для мобильных устройств */
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  header {
+    padding: 15px;
+  }
+
+  header h1 {
+    font-size: 1.5em;
+  }
+
+  section {
+    padding: 15px;
+  }
+
+  h2 {
+    font-size: 1.2em;
+    padding-left: 6px;
+  }
+
+  /* Таблица: делаем её прокручиваемой */
+  .results-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+    border-spacing: 0;
+  }
+
+  .results-table th,
+  .results-table td {
+    font-size: 0.9em;
+    padding: 8px;
+  }
+
+  .results-table th:nth-child(1),
+  .results-table th:nth-child(2) {
+    color: #666;
+  }
+
+  /* Фиксируем заголовки таблицы */
+  .results-table thead {
+    position: sticky;
+    top: 0;
+    background: #f5f5f5;
+    z-index: 10;
+  }
+
+  /* Формы */
+  input[type="number"],
+  input[type="text"],
+  input[type="date"],
+  select {
+    font-size: 0.9em;
+    padding: 10px;
+  }
+
+  /* Кнопки */
+  button,
+  .toggle-details {
+    padding: 12px 16px;
+    font-size: 1em;
+    width: 100%;
+  }
+
+  .goal-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .goal-actions {
+    width: 100%;
+    text-align: left;
+    margin-top: 8px;
+  }
+
+  .goal-actions button {
+    font-size: 1em;
+  }
+
+  /* Модальное окно */
+  .modal-card {
+    width: 95%;
+    padding: 16px;
+  }
+
+  .progress-container {
+    height: 16px;
+  }
+}
