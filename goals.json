@@ -1,0 +1,46 @@
+{
+  "monthlyContribution": "70000",
+  "startDate": "2025-03-01",
+  "goals": [
+    {
+      "name": "Закрытие Рассрочки 45000р и мелкого кредита 22660р",
+      "target": 67660,
+      "type": "flexible",
+      "months": null,
+      "comment": "Погнали",
+      "createdDate": "2025-02-04"
+    },
+    {
+      "name": "Накопить первую подушечку 100 000р",
+      "target": 100000,
+      "type": "flexible",
+      "months": null,
+      "comment": "",
+      "createdDate": "2025-02-04"
+    },
+    {
+      "name": "Закрыть первый крупный кредит 87326",
+      "target": 87326,
+      "type": "flexible",
+      "months": null,
+      "comment": "",
+      "createdDate": "2025-02-04"
+    },
+    {
+      "name": "Закрыть второй крупный кредит 216тыс",
+      "target": 216872,
+      "type": "flexible",
+      "months": null,
+      "comment": "",
+      "createdDate": "2025-02-04"
+    },
+    {
+      "name": "Добить подушку до 300 000р",
+      "target": 200000,
+      "type": "flexible",
+      "months": null,
+      "comment": "",
+      "createdDate": "2025-02-04"
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Финансовый план: Цели и накопления</title>
+    <!-- Подключение Remix Icon -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Финансовый план: Цели и накопления</h1>
+        <p>План накоплений для выполнения поставленных целей</p>
+      </header>
+
+      <!-- Результаты симуляции -->
+      <section class="results">
+        <h2>Мой план</h2>
+        <!-- Итоговая таблица: по месяцам -->
+        <div id="simulationResults"></div>
+      </section>
+
+      <section class="goals">
+        <h2>Список целей</h2>
+        <div id="goalsList">
+          <!-- Список целей с поддержкой drag & drop -->
+        </div>
+      </section>
+
+      <!-- Параметры плана -->
+      <section class="inputs">
+        <h2>Параметры плана</h2>
+        <label for="monthlyContribution">Ежемесячный взнос (₽):</label>
+        <input
+          type="number"
+          id="monthlyContribution"
+          value="70000"
+          step="1000"
+        />
+
+        <label for="startDate">Дата старта:</label>
+        <!-- Дата старта подставляется из JSON или по умолчанию – следующий месяц -->
+        <input type="date" id="startDate" />
+
+        <button id="simulateButton">Пересчитать план</button>
+        <button id="toggleDetails" class="toggle-details">
+          Показать/Скрыть детали
+        </button>
+      </section>
+
+      <!-- Управление целями -->
+      <section class="goals">
+        <h2>Управление целями</h2>
+        <form id="addGoalForm">
+          <label for="goalName">Название цели:</label>
+          <input
+            type="text"
+            id="goalName"
+            placeholder="Например, Подушка безопасности"
+            required
+          />
+
+          <label for="goalTarget">Целевая сумма (₽):</label>
+          <input
+            type="number"
+            id="goalTarget"
+            placeholder="Сумма цели"
+            required
+          />
+
+          <label for="goalType">Тип накопления:</label>
+          <select id="goalType">
+            <!-- "regular" – фиксированный регулярный платеж (вы задаёте срок, и в каждом месяце вносится равная часть, не превышающая общий взнос),
+                         "flexible" – гибкий накопление -->
+            <option value="flexible">Гибкий платеж</option>
+            <option value="regular">Регулярный платеж</option>
+          </select>
+
+          <div id="regularOptions">
+            <label for="goalMonths"
+              >Срок (в месяцах, для регулярного платежа):</label
+            >
+            <input
+              type="number"
+              id="goalMonths"
+              placeholder="Количество месяцев"
+              min="1"
+            />
+          </div>
+
+          <label for="goalComment">Комментарий:</label>
+          <input
+            type="text"
+            id="goalComment"
+            placeholder="Комментарий к цели (необязательно)"
+          />
+
+          <button type="submit">Добавить цель</button>
+        </form>
+
+        <button id="saveGoalsJson">Сохранить JSON</button>
+        <button id="loadGoalsJson">Загрузить JSON</button>
+        <!-- Скрытый input для загрузки файла -->
+        <input type="file" id="fileInput" style="display: none" />
+      </section>
+
+      <!-- Информация -->
+      <section class="summary">
+        <h2>Информация</h2>
+        <p>
+          Для целей типа <strong>Регулярный платеж</strong> вы задаёте срок (в
+          месяцах), что определяет фиксированный ежемесячный платёж (целевое
+          значение/срок). Если текущая дата симуляции меньше даты завершения
+          (дата создания цели + срок), в колонке "Сумма внесена" показывается
+          этот платеж. Остаток – это деньги, оставшиеся от общего ежемесячного
+          взноса, которые переносятся на следующий месяц.
+        </p>
+      </section>
+    </div>
+
+    <!-- Модальное окно для карточки цели -->
+    <div id="modalOverlay" class="modal-overlay" style="display: none">
+      <div class="modal-card">
+        <button id="modalClose" class="modal-close">
+          <i class="ri-close-line"></i>
+        </button>
+        <div id="modalContent">
+          <!-- Данные карточки цели подставляются динамически -->
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
