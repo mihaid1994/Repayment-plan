@@ -53,7 +53,7 @@ function updateGoalsUI() {
         goal.target / goal.months
       )})`;
     } else {
-      desc += `<br><i class="ri-time-line"></i> Гибкий накопление`;
+      desc += `<br><i class="ri-time-line"></i> Гибкий платеж`;
     }
     if (goal.comment) {
       desc += `<br><i class="ri-chat-1-line"></i> ${goal.comment}`;
@@ -259,7 +259,7 @@ function simulatePlan() {
       }
     });
 
-    // 2. Обработка целей типа "Гибкий накопление"
+    // 2. Обработка целей типа "Гибкий платеж"
     simGoals.forEach((goal) => {
       if (
         goal.type === "flexible" &&
