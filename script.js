@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Устанавливаем "Гибкий платеж" как тип цели по умолчанию
   const goalTypeSelect = document.getElementById("goalType");
-  goalTypeSelect.value = "flexible"; // Установка flexible по умолчанию
+  goalTypeSelect.value = "flexible";
 
   // Скрываем блок для "Регулярного платежа" по умолчанию
   const regularOptions = document.getElementById("regularOptions");
@@ -168,8 +168,20 @@ function tryFetchGoals() {
     });
 }
 
-// Симуляция плана накоплений с учетом rollover (остаток месячного взноса)
-// Каждый месяц доступно: monthlyContribution + carryover (с предыдущего месяца)
+/* 
+Симуляция плана накоплений с детальной разбивкой операций:
+- Каждый месяц доступна сумма monthlyContribution.
+- В рамках месяца цели обрабатываются по порядку (сначала regular, затем flexible).
+- Для каждой операции (выделения части платежа в цель) создаётся строка с информацией:
+  • Месяц
+  • Цель (название)
+  • Расход на цели (сумма, направленная в эту операцию)
+  • Остаток цели (сколько осталось накопить для закрытия данной цели)
+  • Остаток от платежа (средства, оставшиеся из monthlyContribution после данной операции)
+  • Общий остаток по всем целям – суммарное, оставшееся для всех целей (после данной операции)
+- Если значение для «Остаток цели», «Остаток от платежа» или «Общий остаток по всем целям» равно 0, ячейка остаётся пустой.
+- Строки для «Свободных средств» не создаются.
+*/
 function simulatePlan() {
   const monthlyContribution =
     Number(document.getElementById("monthlyContribution").value) || 70000;
@@ -181,7 +193,8 @@ function simulatePlan() {
     const now = new Date();
     currentDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   }
-  // Если у цели не задана createdDate, считаем, что она создана в день симуляции
+  // Создаём копии целей для симуляции: если не задана createdDate – берём текущую дату
+  // Обнуляем накопление (current) для симуляции.
   const simGoals = goals.map((g) => ({
     name: g.name,
     target: g.target,
@@ -194,10 +207,10 @@ function simulatePlan() {
     current: 0,
   }));
 
-  let timelineRows = [];
   const maxMonths = 200;
   let monthCount = 0;
-  let carryover = 0; // остаток, который переносится на следующий месяц
+  // Массив строк для итоговой таблицы – каждая строка соответствует одной операции
+  let timelineRows = [];
 
   while (monthCount < maxMonths && simGoals.some((g) => g.current < g.target)) {
     monthCount++;
@@ -218,83 +231,73 @@ function simulatePlan() {
     const monthLabel =
       monthNames[currentDate.getMonth()] + " " + currentDate.getFullYear();
 
-    // Доступные средства в этом месяце = ежемесячный взнос + перенос со прошлого месяца
-    let available = monthlyContribution + carryover;
-    // Обнуляем carryover – он будет определён после распределения средств
-    carryover = 0;
-    let monthPayments = []; // платежи за этот месяц
+    // В начале месяца доступно ровно monthlyContribution
+    let available = monthlyContribution;
 
-    // Функция для проверки, доступна ли цель для начисления платежа.
-    // Теперь цель считается доступной, если текущая дата симуляции >= даты создания цели.
-    function isGoalEligible(goal) {
-      let goalCreated = new Date(goal.createdDate);
-      return currentDate >= goalCreated;
-    }
-
-    // 1. Обработка целей типа "Регулярный платеж"
+    // Обрабатываем цели типа "regular"
     simGoals.forEach((goal) => {
       if (
         goal.type === "regular" &&
         goal.current < goal.target &&
-        isGoalEligible(goal)
+        currentDate >= goal.createdDate
       ) {
-        // Определяем дату завершения регулярного платежа: createdDate + срок (в месяцах)
+        // Определяем дату завершения регулярного платежа: createdDate + months
         let dueDate = new Date(goal.createdDate);
         dueDate.setMonth(dueDate.getMonth() + goal.months);
-        // Если текущая дата меньше dueDate – фиксированный платеж, иначе 0 (срок прошёл)
+        // Если текущая дата меньше dueDate, плановый платёж равен target/months, иначе 0
         let plannedPayment =
           currentDate < dueDate ? goal.target / goal.months : 0;
-        let required = goal.target - goal.current;
-        let payment = Math.min(plannedPayment, required, available);
-        if (payment > 0) {
-          goal.current += payment;
-          available -= payment;
-          monthPayments.push({
-            goalName: goal.name,
-            payment: payment,
-            cumulative: goal.current,
-            remainder: goal.target - goal.current,
-          });
+        if (plannedPayment > 0 && available > 0) {
+          let required = goal.target - goal.current;
+          let payment = Math.min(plannedPayment, required, available);
+          if (payment > 0) {
+            goal.current += payment;
+            available -= payment;
+            // Рассчитываем суммарный Общий остаток по всем целям после операции
+            const globalRemaining = simGoals.reduce(
+              (sum, g) => sum + (g.target - g.current),
+              0
+            );
+            timelineRows.push({
+              month: monthLabel,
+              goalName: goal.name,
+              payment: payment,
+              totalGoalRemainder: goal.target - goal.current,
+              remainderFromPayment: available,
+              globalRemaining: globalRemaining,
+            });
+          }
         }
       }
     });
 
-    // 2. Обработка целей типа "Гибкий платеж"
+    // Обрабатываем цели типа "flexible"
     simGoals.forEach((goal) => {
       if (
         goal.type === "flexible" &&
         goal.current < goal.target &&
-        isGoalEligible(goal)
+        currentDate >= goal.createdDate &&
+        available > 0
       ) {
         let required = goal.target - goal.current;
         let payment = Math.min(required, available);
         if (payment > 0) {
           goal.current += payment;
           available -= payment;
-          monthPayments.push({
+          const globalRemaining = simGoals.reduce(
+            (sum, g) => sum + (g.target - g.current),
+            0
+          );
+          timelineRows.push({
+            month: monthLabel,
             goalName: goal.name,
             payment: payment,
-            cumulative: goal.current,
-            remainder: goal.target - goal.current,
+            totalGoalRemainder: goal.target - goal.current,
+            remainderFromPayment: available,
+            globalRemaining: globalRemaining,
           });
         }
       }
-    });
-
-    // Остаток не израсходованных средств переносим на следующий месяц
-    carryover = available;
-
-    // Суммарно за месяц вычисляем общую сумму платежей
-    let totalAllocated = monthPayments.reduce(
-      (sum, item) => sum + item.payment,
-      0
-    );
-
-    timelineRows.push({
-      month: monthLabel,
-      payments: monthPayments,
-      totalPayment: totalAllocated,
-      carryover: carryover,
     });
 
     // Переходим к следующему месяцу
@@ -305,7 +308,8 @@ function simulatePlan() {
 }
 
 // Вывод итогового плана в виде таблицы.
-// Таблица содержит столбцы: Месяц, Цель (с детализацией платежей), Сумма внесена, Остаток.
+// Столбцы: Месяц, Цель, Расход на цели, Остаток цели, Остаток от платежа, Общий остаток по всем целям.
+// Если значение для "Остаток цели", "Остаток от платежа" или "Общий остаток по всем целям" равно 0, ячейка остаётся пустой.
 function displayResults(timelineRows) {
   const resultsDiv = document.getElementById("simulationResults");
   resultsDiv.innerHTML = "";
@@ -319,43 +323,35 @@ function displayResults(timelineRows) {
       <th><i class="ri-flag-line"></i> Цель</th>
       <th>Расход на цели</th>
       <th>Остаток цели</th>
-      <th>Остаток платежа</th>
+      <th>Остаток от платежа</th>
+      <th>Общий остаток по всем целям</th>
     </tr>`;
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
-
   timelineRows.forEach((row) => {
     const tr = document.createElement("tr");
     tr.classList.add("fade-in-row");
 
-    // В колонке "Цель" выводим только уникальные наименования целей (если платежей несколько, объединяем через запятую)
-    let goalNames =
-      row.payments.length > 0
-        ? [...new Set(row.payments.map((p) => p.goalName))].join(", ")
-        : "-";
-
-    // "Расход на цели" – суммарная сумма платежей за месяц
-    let accumulated = row.totalPayment;
-    // "Остаток цели" – суммарный остаток (для каждой цели: целевое – накопленное) в этом месяце
-    let totalGoalRemainder = row.payments.reduce(
-      (sum, p) => sum + p.remainder,
-      0
-    );
-    // "Остаток платежа" – это carryover, который остался не израсходованным в этом месяце
-    let carry = row.carryover;
+    let goalRemainderDisplay =
+      row.totalGoalRemainder === 0 ? "" : formatRUB(row.totalGoalRemainder);
+    let paymentRemainderDisplay =
+      row.remainderFromPayment === 0 ? "" : formatRUB(row.remainderFromPayment);
+    let globalRemainingDisplay =
+      row.globalRemaining === 0 ? "" : formatRUB(row.globalRemaining);
 
     tr.innerHTML = `<td>${row.month}</td>
-        <td class="goal-summary" data-goal="${goalNames}">${goalNames}</td>
-        <td>${formatRUB(accumulated)}</td>
-        <td>${formatRUB(totalGoalRemainder)}</td>
-        <td>${formatRUB(carry)}</td>`;
+        <td class="goal-summary" data-goal="${row.goalName}">${
+      row.goalName
+    }</td>
+        <td>${formatRUB(row.payment)}</td>
+        <td>${goalRemainderDisplay}</td>
+        <td>${paymentRemainderDisplay}</td>
+        <td>${globalRemainingDisplay}</td>`;
 
-    // При клике на ячейку с наименованием цели открывается модальное окно с подробностями (для примера берётся первая цель месяца)
+    // По клику на название цели открывается модальное окно с подробностями операции
     tr.querySelector(".goal-summary").addEventListener("click", function () {
-      if (row.payments.length > 0) {
-        openModal(row.payments[0]);
-      }
+      openModal(row);
     });
 
     tbody.appendChild(tr);
@@ -364,7 +360,6 @@ function displayResults(timelineRows) {
   table.appendChild(tbody);
   resultsDiv.appendChild(table);
 
-  // Дополнительный блок с пояснением (можно доработать при необходимости)
   const detailsDiv = document.createElement("div");
   detailsDiv.className = "month-details";
   detailsDiv.innerHTML =
@@ -372,30 +367,47 @@ function displayResults(timelineRows) {
   resultsDiv.appendChild(detailsDiv);
 }
 
-// Открытие модального окна с карточкой цели
+// Открытие модального окна с карточкой цели (подробности операции)
 function openModal(paymentData) {
   const modalOverlay = document.getElementById("modalOverlay");
   const modalContent = document.getElementById("modalContent");
-  let progressPercent = Math.min(
-    100,
-    (
-      (paymentData.cumulative /
-        (paymentData.cumulative + paymentData.remainder)) *
-      100
-    ).toFixed(0)
-  );
+  // Рассчитываем процент выполнения для цели (если остаток цели не пустой)
+  let progressPercent =
+    paymentData.totalGoalRemainder !== ""
+      ? Math.min(
+          100,
+          (paymentData.payment /
+            (paymentData.payment + paymentData.totalGoalRemainder)) *
+            100
+        ).toFixed(0)
+      : 100;
   modalContent.innerHTML = `
     <div class="modal-content-item">
       <h2><i class="ri-flag-line"></i> ${paymentData.goalName}</h2>
     </div>
     <div class="modal-content-item">
-      <strong>Внесено в этом платеже:</strong> ${formatRUB(paymentData.payment)}
+      <strong>Внесено в операции:</strong> ${formatRUB(paymentData.payment)}
     </div>
     <div class="modal-content-item">
-      <strong>Расход на цели:</strong> ${formatRUB(paymentData.cumulative)}
+      <strong>Остаток цели:</strong> ${
+        paymentData.totalGoalRemainder === 0
+          ? ""
+          : formatRUB(paymentData.totalGoalRemainder)
+      }
     </div>
     <div class="modal-content-item">
-      <strong>Остаток:</strong> ${formatRUB(paymentData.remainder)}
+      <strong>Остаток от платежа:</strong> ${
+        paymentData.remainderFromPayment === 0
+          ? ""
+          : formatRUB(paymentData.remainderFromPayment)
+      }
+    </div>
+    <div class="modal-content-item">
+      <strong>Общий остаток по всем целям:</strong> ${
+        paymentData.globalRemaining === 0
+          ? ""
+          : formatRUB(paymentData.globalRemaining)
+      }
     </div>
     <div class="modal-content-item">
       <strong>Прогресс:</strong> ${progressPercent}%

@@ -121,7 +121,7 @@ button:active,
 .results-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* Делаем ширину столбцов гибкой */
+  table-layout: fixed;
   margin-top: 20px;
 }
 
@@ -129,36 +129,34 @@ button:active,
 .results-table td {
   padding: 8px;
   border-bottom: 1px solid #ddd;
-  font-size: clamp(12px, 2vw, 16px); /* Уменьшение шрифта при нехватке места */
+  font-size: clamp(12px, 2vw, 16px);
   word-wrap: break-word;
-  white-space: normal; /* Переносим длинные слова */
+  white-space: normal;
   text-align: left;
 }
 
-.results-table th {
-  background: #f5f5f5;
-  font-weight: 600;
-}
-
-/* Гибкое распределение ширины колонок */
+/* Задаём ширину столбцов для 6 колонок:
+   1. Месяц – 15%
+   2. Цель – 25%
+   3. Расход на цели – 15%
+   4. Общий остаток цели – 15%
+   5. Остаток от платежа – 15%
+   6. Остаток по всем целям – 15% */
 .results-table th:nth-child(1),
 .results-table td:nth-child(1) {
-  /* ID */
-  width: 10%;
-  min-width: 50px;
+  width: 15%;
+  min-width: 70px;
 }
 
 .results-table th:nth-child(2),
 .results-table td:nth-child(2) {
-  /* Название */
-  width: 40%;
-  min-width: 120px;
-  max-width: 280px;
+  width: 25%;
+  min-width: 100px;
+  max-width: 250px;
 }
 
 .results-table th:nth-child(3),
 .results-table td:nth-child(3) {
-  /* Количество */
   width: 15%;
   min-width: 80px;
   text-align: center;
@@ -166,7 +164,6 @@ button:active,
 
 .results-table th:nth-child(4),
 .results-table td:nth-child(4) {
-  /* Цена */
   width: 15%;
   min-width: 90px;
   text-align: right;
@@ -174,72 +171,24 @@ button:active,
 
 .results-table th:nth-child(5),
 .results-table td:nth-child(5) {
-  /* Итог */
-  width: 20%;
-  min-width: 100px;
+  width: 15%;
+  min-width: 90px;
   text-align: right;
-  font-weight: bold;
 }
 
-/* Мобильная адаптация таблицы */
-@media (max-width: 768px) {
-  .results-table th,
-  .results-table td {
-    padding: 6px;
-    font-size: clamp(12px, 2.5vw, 14px);
-    line-height: 1.2;
-  }
-
-  .results-table th:nth-child(1),
-  .results-table td:nth-child(1) {
-    width: 8%;
-  }
-  .results-table th:nth-child(2),
-  .results-table td:nth-child(2) {
-    width: 50%;
-  }
-  .results-table th:nth-child(3),
-  .results-table td:nth-child(3) {
-    width: 12%;
-  }
-  .results-table th:nth-child(4),
-  .results-table td:nth-child(4) {
-    width: 12%;
-  }
-  .results-table th:nth-child(5),
-  .results-table td:nth-child(5) {
-    width: 18%;
-  }
+.results-table th:nth-child(6),
+.results-table td:nth-child(6) {
+  width: 15%;
+  min-width: 90px;
+  text-align: right;
 }
 
-/* Узкие экраны < 480px */
-@media (max-width: 480px) {
-  /* Убираем колонку ID */
-  .results-table th:nth-child(1),
-  .results-table td:nth-child(1) {
-    display: none;
-  }
-
-  .results-table th:nth-child(2),
-  .results-table td:nth-child(2) {
-    width: 60%;
-    max-width: 150px;
-  }
-  .results-table th:nth-child(3),
-  .results-table td:nth-child(3) {
-    width: 15%;
-  }
-  .results-table th:nth-child(4),
-  .results-table td:nth-child(4) {
-    width: 15%;
-  }
-  .results-table th:nth-child(5),
-  .results-table td:nth-child(5) {
-    width: 20%;
-  }
+.results-table th {
+  background: #f5f5f5;
+  font-weight: 600;
 }
 
-/* Анимация появления */
+/* Анимация появления строк */
 .fade-in-row {
   animation: rowFadeIn 0.5s ease-out;
 }
@@ -369,18 +318,7 @@ button:active,
   margin-bottom: 12px;
 }
 
-/* Скрываем содержимое первых двух заголовков */
-.results-table th:nth-child(1),
-.results-table th:nth-child(2) {
-  color: transparent; /* Делаем текст невидимым */
-}
-
-/* Выравниваем весь текст заголовков по левому краю */
-.results-table th {
-  text-align: left;
-}
-
-/* Общие стили для мобильных устройств */
+/* Мобильная адаптация */
 @media (max-width: 768px) {
   .container {
     width: 100%;
@@ -406,7 +344,7 @@ button:active,
     padding-left: 6px;
   }
 
-  /* Таблица: делаем её прокручиваемой */
+  /* Таблица делаем прокручиваемой */
   .results-table {
     display: block;
     width: 100%;
@@ -417,13 +355,19 @@ button:active,
 
   .results-table th,
   .results-table td {
-    font-size: 0.9em;
+    font-size: clamp(12px, 2.5vw, 14px);
     padding: 8px;
   }
 
+  /* При узких экранах можно уменьшить ширину некоторых столбцов */
   .results-table th:nth-child(1),
-  .results-table th:nth-child(2) {
-    color: #666;
+  .results-table td:nth-child(1) {
+    min-width: 60px;
+  }
+
+  .results-table th:nth-child(2),
+  .results-table td:nth-child(2) {
+    min-width: 80px;
   }
 
   /* Фиксируем заголовки таблицы */
@@ -475,4 +419,17 @@ button:active,
   .progress-container {
     height: 16px;
   }
+}
+
+/* Узкие экраны < 480px */
+@media (max-width: 480px) {
+  /* Если нужно скрыть какие-либо столбцы, можно добавить правила.
+     Например, если столбец с «Остаток по всем целям» слишком узкий, можно его скрыть.
+     Здесь пример скрытия столбца №6 (раскомментируйте, если необходимо):
+     
+  .results-table th:nth-child(6),
+  .results-table td:nth-child(6) {
+    display: none;
+  }
+  */
 }
